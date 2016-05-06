@@ -246,45 +246,46 @@ def check_classify():
 		print "Not all tests passed, look at classify"
 
 def check_ID3():
-   attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
-   data_set = [[1, 0.27], [0, 0.42], [0, 0.86], [0, 0.68], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
-   numerical_splits_count = [5, 5]
-   n = ID3(data_set, attribute_metadata, numerical_splits_count, 0)
-   fails = 0;
-   if n and n.label == 1:
-      print "Passed 1"
-   else:
-      print "Failed 1"
-      fails += 1
-   attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
-   data_set = [[1, 0.27], [0, 0.42], [0, 0.86], [0, 0.68], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
-   numerical_splits_count = [1, 1]
-   n = ID3(data_set, attribute_metadata, numerical_splits_count, 5)
-   if n and [n.classify(x) == x[0] for x in data_set] == [True, False, True, True, False, True, True, True, True, True, True]:
-      print "Passed 2"
-   else:
-      print "Failed 2"
-      fails += 1
+	attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
+	data_set = [[1, 0.27], [0, 0.42], [0, 0.86], [0, 0.68], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
+	numerical_splits_count = [5, 5]
+	n = ID3(data_set, attribute_metadata, numerical_splits_count, 0)
+	fails = 0;
+	if n and n.label == 1:
+		print "Passed 1"
+	else:
+		print "Failed 1"
+		fails += 1
+	attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
+	data_set = [[1, 0.27], [0, 0.42], [0, 0.86], [0, 0.68], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
+	numerical_splits_count = [1, 1]
+	n = ID3(data_set, attribute_metadata, numerical_splits_count, 5)
+	if n and [n.classify(x) == x[0] for x in data_set] == [True, False, True, True, False, True, True, True, True, True, True]:
+		print "Passed 2"
+	else:
+		print "Failed 2"
+		fails += 1
+	attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
+	data_set = [[1, 0.27], [0, 0.42], [0, 0.86], [0, 0.68], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
+	numerical_splits_count = [5, 5]
+	n = ID3(data_set, attribute_metadata, numerical_splits_count, 5)
+	if n and [n.classify(x) == x[0] for x in data_set] == [True, False, True, True, True, True, True, True, True, True, True]:
+		print "Passed 3"
+	else:
+		print "Failed 3"
+		fails += 1
+	if fails > 0:
+		print "not all tests passed, please see ID3."
+	else:
+		print "all tests passed."
 
-   attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
-   data_set = [[1, 0.27], [0, 0.42], [0, 0.86], [0, 0.68], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
-   numerical_splits_count = [5, 5]
-   n = ID3(data_set, attribute_metadata, numerical_splits_count, 5)
-   if n and [n.classify(x) == x[0] for x in data_set] == [True, False, True, True, True, True, True, True, True, True, True]:
-      print "Passed 3"
-   else:
-      print "Failed 3"
-      fails += 1
-   if fails > 0:
-      print "not all tests passed, please see ID3."
-   else:
-      print "all tests passed."
-   attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "weather",'is_nominal': True}]
-   data_set = [[1, 0], [0, 1], [0, -1], [0, -1], [0, 1], [1, 0], [1, 0], [1, 1], [1, 0], [0, 1], [1, -1]]
-   numerical_splits_count = [5, 1]
-   n = ID3(data_set, attribute_metadata, numerical_splits_count, 1)
-   if n and [n.classify(x) == x[0] for x in data_set] == [True, True, True, True, True, True, True, False, True, True, False]:
-   	print "Passed nominal test"
-   else:
-   	print "Failed nominal test"
+	attribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "weather",'is_nominal': True}]
+	data_set = [[1, 0], [0, 1], [0, -1], [0, -1], [0, 1], [1, 0], [1, 0], [1, 1], [1, 0], [0, 1], [1, -1]]
+	numerical_splits_count = [5, 1]
+	n = ID3(data_set, attribute_metadata, numerical_splits_count, 1)
+	if n and [n.classify(x) == x[0] for x in data_set] == [True, True, True, True, True, True, True, False, True, True, False]:
+		print "Passed nominal test"
+	else:
+		print "Failed nominal test"
+   
 test = grader( **options )

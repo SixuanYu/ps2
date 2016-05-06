@@ -1,7 +1,6 @@
 import math
-from node import Node
-from math import log
 import operator
+from node import Node
 import sys
 
 def ID3(data_set, attribute_metadata, numerical_splits_count, depth):
@@ -17,7 +16,178 @@ def ID3(data_set, attribute_metadata, numerical_splits_count, depth):
     ========================================================================================================
 
     '''
-    # Your code here
+    # where to pre-process the data set about the missing attribute value
+    # try_data_set = [[1, 0.27], [None, 0.42], [0, None], [0, None], [0, 0.04], [1, 0.01], [1, 0.33], [1, 0.42], [1, 0.42], [0, 0.51], [1, 0.4]]
+    # myattribute_metadata = [{'name': "winner",'is_nominal': True},{'name': "opprundifferential",'is_nominal': False}]
+    # x = []
+    # y = 3
+    # z = 1
+    # x.extend([y])
+    # x.extend([z])
+    # print x
+    data_set = data_prep(data_set, attribute_metadata)
+    nominal_keys = [[0]]
+    for j in xrange(1, len(data_set[0])):
+        if attribute_metadata[j].get('is_nominal') == False:
+            nominal_keys.append([0])
+        else:
+            nominal_value = []
+            for i in xrange(len(data_set)):
+                if i == 0:
+                    nominal_value.extend([data_set[i][j]])
+                elif data_set[i][j] not in nominal_value:
+                    nominal_value.extend([data_set[i][j]])
+            nominal_keys.append(nominal_value)
+            #TODO: May need to sort the keys
+    # print nominal_keys
+    return ID3_helper(data_set, attribute_metadata, numerical_splits_count, depth, nominal_keys)
+    # print data_set
+    # default = mode(data_set)
+    # att = pick_best_attribute(data_set, attribute_metadata, numerical_splits_count)
+    # if depth == 0 or att[0] == False:  #depth or gain ratio is 0
+    #     d = Node()
+    #     d.label = default
+    #     return d
+    # elif check_homogenous(data_set) is not None:
+    #     d = Node()
+    #     d.label = check_homogenous(data_set)
+    #     return d
+    # else:  #how to recursion
+    #     root = Node()
+    #     # att = pick_best_attribute(data_set, attribute_metadata, numerical_splits_count)
+    #     # if att[0] != False:
+    #     root.label = None
+    #     root.decision_attribute = att[0]
+    #     root.name = attribute_metadata[att[0]].get('name')
+    #     root.is_nominal = attribute_metadata[att[0]].get('is_nominal')
+    #     if root.is_nominal == False:
+    #         numerical_splits_count[att[0]] -= 1
+    #         root.splitting_value = att[1]
+    #         root.children = []
+    #         left_dataset = []
+    #         right_dataset = []
+    #         for i in xrange(len(data_set)):
+    #             if data_set[i][att[0]] < att[1]:
+    #                 left_dataset.append(data_set[i])
+    #             else:
+    #                 right_dataset.append(data_set[i])
+    #         depth = depth - 1
+    #         root.children.append(ID3(left_dataset, attribute_metadata, numerical_splits_count, depth))
+    #         root.children.append(ID3(right_dataset, attribute_metadata, numerical_splits_count, depth))
+    #     else:
+    #         root.children = {}
+    #         # for key in
+    #     return root
+
+def ID3_helper(data_set, attribute_metadata, numerical_splits_count, depth, nominal_keys):
+    att = pick_best_attribute(data_set, attribute_metadata, numerical_splits_count)
+    print "before"
+    # print attribute_metadata
+    # print numerical_splits_count
+    print att
+    print "after"
+    if depth == 0 or att[0] == False:  #depth or gain ratio is 0
+        d = Node()
+        default = mode(data_set)
+        d.label = default
+        return d
+    elif check_homogenous(data_set) is not None:
+        d = Node()
+        d.label = check_homogenous(data_set)
+        return d
+    else:  #how to recursion
+        root = Node()
+        # att = pick_best_attribute(data_set, attribute_metadata, numerical_splits_count)
+        # if att[0] != False:
+        root.label = None
+        root.decision_attribute = att[0]
+        root.name = attribute_metadata[att[0]].get('name')
+        root.is_nominal = attribute_metadata[att[0]].get('is_nominal')
+        if root.is_nominal == False:
+            numerical_splits_count[att[0]] -= 1
+            root.splitting_value = att[1]
+            root.children = []
+            left_dataset = []
+            right_dataset = []
+            for i in xrange(len(data_set)):
+                if data_set[i][att[0]] < att[1]:
+                    left_dataset.append(data_set[i])
+                else:
+                    right_dataset.append(data_set[i])
+            depth = depth - 1
+            root.children.append(ID3_helper(left_dataset, attribute_metadata, numerical_splits_count, depth, nominal_keys))
+            root.children.append(ID3_helper(right_dataset, attribute_metadata, numerical_splits_count, depth, nominal_keys))
+        else:
+            root.children = {}
+            for key in nominal_keys[att[0]]:
+                chile_dataset = []
+                for i in xrange(len(data_set)):
+                    if data_set[i][att[0]] == key:
+                        chile_dataset.append(data_set[i])
+                child = ID3_helper(chile_dataset, attribute_metadata, numerical_splits_count, depth, nominal_keys)
+                root.children.update({key: child})
+        return root
+
+def data_prep(data_set, attribute_metadata):
+    '''
+    ========================================================================================================
+    Input:  A data_set
+    ========================================================================================================
+    Job:    processing the missing data in the dataset
+    ========================================================================================================
+    Output: a new dataset with no missing data
+    ========================================================================================================
+    '''
+    new_dset = []
+    #remove all the instances that don't have output label
+    for i in xrange(len(data_set)):
+        if data_set[i][0] is not None:
+            new_dset.append(data_set[i][:])
+    #process unkonwn atrribute data
+    #rule: for nominal, pick the value that majority label has; for numeric, calculate the average value corresponding to its label
+    for j in xrange(1, len(new_dset[0])):
+        pos_avg = 0.0
+        neg_avg = 0.0
+        pos_count = 0
+        neg_count = 0
+        if attribute_metadata[j].get('is_nominal') == False:
+            for i in xrange(len(new_dset)):
+                if new_dset[i][j] is not None:
+                    if new_dset[i][0] == 1:
+                        pos_avg += new_dset[i][j]
+                        pos_count += 1
+                    else:
+                        neg_avg += new_dset[i][j]
+                        neg_count += 1
+            if pos_count != 0:
+                pos_avg = pos_avg/float(pos_count)
+            if neg_count != 0:
+                neg_avg = neg_avg/float(neg_count)
+            for i in xrange(len(new_dset)):
+                if new_dset[i][j] is None:
+                    if new_dset[i][0] == 1:
+                        new_dset[i][j] = pos_avg
+                    else:
+                        new_dset[i][j] = neg_avg
+        else:  #TODO still need to think how to process nominal missing variables
+            # for i in xrange(len(new_dset)):
+            #     if new_dset[i][j] is not None:
+            #         if i == 0:
+            #             dic = {new_dset[i][j]:[new_dset[i]]}
+            #         elif dic.has_key(new_dset[i][j]):
+            #             dic[new_dset[i][j]] += [new_dset[i]]
+            #         else:
+            #             dic_add = {new_dset[i][j]:[new_dset[i]]}
+            #             dic.update(dic_add)
+            for i in xrange(len(new_dset)):
+                if new_dset[i][j] is None:
+                    if new_dset[i][0] == 1:
+                        new_dset[i][j] = 1
+                    else:
+                        new_dset[i][j] = 1
+    # print data_set
+    # print new_dset
+    return new_dset
     pass
 
 def check_homogenous(data_set):
@@ -30,7 +200,6 @@ def check_homogenous(data_set):
     Output: Return either the homogenous attribute or None
     ========================================================================================================
      '''
-    # Your code here
     for i in xrange(len(data_set)-1):
         if not data_set[0][0] == data_set[i+1][0]:
             return None
@@ -63,10 +232,14 @@ def pick_best_attribute(data_set, attribute_metadata, numerical_splits_count):
     split_value = 0.0
     final_split_value = 0.0
     for i in xrange(1,len(attribute_metadata)):
+        print i
         if attribute_metadata[i].values()[0]:      # the attribute is nominal
+            print "nominal"
             gain_ratio = gain_ratio_nominal(data_set,i)
-        else:       
-            if numerical_splits_count[i]>0:        # the attribute is numeric
+        else: # the attribute is numeric
+            print "numeric"
+            if numerical_splits_count[i] > 0:
+                print "numeric can split"
                 gain_ratio_result = gain_ratio_numeric(data_set,i,1)
                 gain_ratio = gain_ratio_result[0]
                 split_value = gain_ratio_result[1]
@@ -76,12 +249,12 @@ def pick_best_attribute(data_set, attribute_metadata, numerical_splits_count):
                 best_attribute = i
                 max_gain_ratio = gain_ratio
                 final_split_value = split_value
-    if max_gain_ratio == 0:
-        return (False,False)
-    elif attribute_metadata[best_attribute].values()[0]:
+    if max_gain_ratio == 0.0:
+        return (False, False)
+    if attribute_metadata[best_attribute].values()[0]:
         return (best_attribute,False)
     else:
-        return (best_attribute,final_split_value)
+        return (best_attribute, final_split_value)
 
 
 
@@ -96,6 +269,7 @@ def pick_best_attribute(data_set, attribute_metadata, numerical_splits_count):
 
 # Uses gain_ratio_nominal or gain_ratio_numeric to calculate gain ratio.
 
+#don't consider missing attribute here yet
 def mode(data_set):
     '''
     ========================================================================================================
@@ -106,7 +280,6 @@ def mode(data_set):
     Output: mode of index 0.
     ========================================================================================================
     '''
-    # Your code here
     total = 0
     for i in xrange(len(data_set)):
         total += data_set[i][0];
@@ -121,6 +294,7 @@ def mode(data_set):
 # data_set = [[0],[1],[0],[0]]
 # mode(data_set) == 0
 
+#don't consider missing attribute here yet
 def entropy(data_set):
     '''
     ========================================================================================================
@@ -135,12 +309,15 @@ def entropy(data_set):
     length = len(data_set)
     total = 0
     for i in xrange(len(data_set)):
-        total += data_set[i][0];
-    p1 = float(total) / float(length) 
+        total += data_set[i][0]
+    if length == 0:
+        p1 = 0
+    else:
+        p1 = float(total) / float(length)
     p0 = 1 - p1
     if p1==0 or p0==0:
         return 0
-    return -(math.log(p1,2)*p1 + math.log(p0,2)*p0)
+    return -(my_log(p1,2)*p1 + my_log(p0,2)*p0)
     
 
 # ======== Test case =============================
@@ -163,10 +340,13 @@ def gain_ratio_nominal(data_set, attribute):
     ========================================================================================================
     '''
     length = len(data_set)
-    H_Ex = entropy(data_set)   # H(Ex) = entropy for data_set
+    index0_set = [[] for i in xrange(length)]
+    for i in xrange(length):
+        index0_set[i].append(data_set[i][0])
+    H_Ex = entropy(index0_set)   # H(Ex) = entropy for 0th index in all training examples
 
     dic = split_on_nominal(data_set,attribute)
-    value_set = []     # times of occurence for each value of a given attribute
+    value_set = []     # contains times of occurence for each value of a given attribute
     occur = 0          # total times of occurence for a given attribute
     IV = 0.0
     H_total = 0.0
@@ -181,11 +361,16 @@ def gain_ratio_nominal(data_set, attribute):
         countOf1 = 0
         for j in xrange(count):
             countOf1 += dic.values()[i][j][0]
-        p1 = float(countOf1)/float(count)
+        if count == 0:
+            p1 = 0
+        else:
+            p1 = float(countOf1)/float(count)
         p0 = 1 - p1
-        H_total -= float(count)/float(length)*(p1 * my_log(p1,2) + p0 * my_log(p0,2)) 
-    return (H_Ex - H_total)/IV
-
+        H_total -= float(count)/float(length)*(p1 * my_log(p1,2) + p0 * my_log(p0,2))
+    if IV == 0:
+        return 0
+    else:
+        return (H_Ex - H_total)/IV
 # ======== Test case =============================
 # data_set, attr = [[1, 2], [1, 0], [1, 0], [0, 2], [0, 2], [0, 0], [1, 3], [0, 4], [0, 3], [1, 1]], 1
 # gain_ratio_nominal(data_set,attr) == 0.11470666361703151
@@ -211,7 +396,9 @@ def gain_ratio_numeric(data_set, attribute, steps):
     '''
     i = 0
     h_ex = entropy(data_set)  #entropy
+    gain = {}
     while i < len(data_set):
+        # print i
         temp_thre = data_set[i][attribute]
         temp_tuple = split_on_numerical(data_set, attribute, temp_thre)
         #iv calculation
@@ -241,16 +428,19 @@ def gain_ratio_numeric(data_set, attribute, steps):
             temp_gain = 0
         else:
             temp_gain = float(h_ex-ha_ex)/iv
-        if i == 0:
-            gain = {temp_thre:temp_gain}
-        else:
-            gain.update({temp_thre:temp_gain})
+        gain.update({temp_thre:temp_gain})
         i += steps
     sorted_x = sorted(gain.items(), key=operator.itemgetter(1))
     # print sorted_x
-    threshold = sorted_x[len(sorted_x)-1][0]
-    gain_ratio = sorted_x[len(sorted_x)-1][1]
+    if len(sorted_x) == 0:
+        gain_ratio = 0
+        threshold = 0
+    else:
+        threshold = sorted_x[len(sorted_x)-1][0]
+        gain_ratio = sorted_x[len(sorted_x)-1][1]
     return (gain_ratio, threshold)
+    # pass
+
 # ======== Test case =============================
 # data_set,attr,step = [[0,0.05], [1,0.17], [1,0.64], [0,0.38], [0,0.19], [1,0.68], [1,0.69], [1,0.17], [1,0.4], [0,0.53]], 1, 2
 # gain_ratio_numeric(data_set,attr,step) == (0.31918053332474033, 0.64)
@@ -270,10 +460,11 @@ def split_on_nominal(data_set, attribute):
     ========================================================================================================
     '''
     length = len(data_set)
+    dic = {}
     for i in xrange(length):
       #  index0_set[i].append(data_set[i][0])
         if i == 0:
-            dic = {data_set[i][attribute]:[data_set[i]]}
+            dic.update({data_set[i][attribute]:[data_set[i]]})
         elif dic.has_key(data_set[i][attribute]):
             dic[data_set[i][attribute]] += [data_set[i]]
         else:
@@ -317,4 +508,3 @@ def my_log(d, b):
         return 0
     else:
         return math.log(d, b)
-

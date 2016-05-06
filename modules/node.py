@@ -31,6 +31,30 @@ class Node:
         self.children = {}
         self.name = None
 
+    def convert_to_leaf(self):
+        '''
+        convert a node to a convert_to_leaf temporarily
+        '''
+        self.label = self.majority_label;
+
+    def convert_back_to_node(self):
+        '''
+        convert a leaf (used to be a node) back to a node
+        '''
+        self.label = None
+
+    def convert_to_final_leaf(self):
+        '''
+        convert a node to a convert_to_leaf 
+        '''
+        self.label = self.majority_label;
+        self.decision_attribute = None
+        self.is_nominal = None
+        self.value = None
+        self.splitting_value = None
+        self.children = {}
+        self.name = None
+
     def classify(self, instance):
         '''
         given a single observation, will return the output of the tree
@@ -66,14 +90,22 @@ class Node:
         s = []
         s.append(current)
         s.append(str(current.name))
-
+        first = True
         while len(s) != 0:
             path = s.pop()
             current = s.pop()
 
-            if current.label == 1 or current.label == 0:  #------------------delete?
+            if current.label == 1 or current.label == 0:
                 if current.label == 1:
-                    print ' %s ' % path
+                    # print ' %s ' % path + "v"
+                    if first:
+                        print ' %s ' % path
+                        final_path = ' %s ' % path
+                        first = False
+                    else:
+                        print '| %s ' % path
+                        final_path += '| %s ' % path
+
 
             if current.is_nominal == False:
                 if current.children[1]:
@@ -86,16 +118,18 @@ class Node:
                 if current.children[0]:
                     leftstr =  path + "<"+ "%s" % current.splitting_value
                     if current.children[0].name != None:
-                        leftstr += "^" + str(current.children[0].name)
+                        leftstr += " & " + str(current.children[0].name)
                     s.append(current.children[0])
                     s.append(leftstr)
             else:
                 for key in current.children:
                     str_nomi = path + "="+ "%s" % key
                     if current.children.get(key).name != None:
-                        str_nomi +=  "^" + str(current.children.get(key).name)
+                        str_nomi +=  " & " + str(current.children.get(key).name)
                     s.append(current.children.get(key))
                     s.append(str_nomi)
+        return final_path
+
 # used to test dnf print
 def check_dnf():
     a0 = Node()

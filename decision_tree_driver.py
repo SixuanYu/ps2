@@ -9,16 +9,15 @@ from modules.predictions import *
 # decision tree driver - takes a dictionary of options and runs the ID3 algorithm.
 #   Supports numerical attributes as well as missing attributes. Documentation on the
 #   options can be found in README.md
-
 options = {
-    'train' : 'data/btrain.csv',
-    'validate': 'data/bvalidate.csv',
-    'predict': 'data/btest.csv',
+    'train' : 'data/test_btrain.csv',
+    'validate': 'data/test_bvalidate.csv',
+    'predict': 'data/test_btest.csv',
     'limit_splits_on_numerical': 5,
     'limit_depth': 20,
-    'print_tree': True,
+    'print_tree': False,
     'print_dnf' : False,
-    'prune' : 'data/bvalidate.csv',
+    'prune' : 'data/test_bvalidate.csv',
     'learning_curve' : {
         'upper_bound' : 0.05,
         'increment' : 0.001
